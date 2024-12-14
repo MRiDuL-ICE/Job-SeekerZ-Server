@@ -52,9 +52,7 @@ async function run() {
       const filter = { applicant_email: email };
       const result = await jobApllicationCollection.find(filter).toArray();
       for (const application of result) {
-        console.log(application.job_id)
         const query = { _id: new ObjectId(application.job_id) };
-        console.log(query)
         const job = await jobCollection.findOne(query);
         console.log(job);
         if (job) {
@@ -63,6 +61,14 @@ async function run() {
           application.company_logo = job.company_logo;
         }
       }
+      res.send(result);
+    });
+
+    app.delete(`/job-application/:id`, async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = { _id: new ObjectId(id) };
+      const result = await jobApllicationCollection.deleteOne(filter);
       res.send(result);
     });
 
