@@ -92,6 +92,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get(`/job-applications/jobs/:job_id`, async(req, res) => {
+      const job_id = req.params.job_id
+      const filter = { job_id: job_id}
+      const result = await jobApllicationCollection.find(filter).toArray()
+      res.send(result)
+    })
+
     app.delete(`/job-application/:id`, async (req, res) => {
       const id = req.params.id;
       console.log(id);
