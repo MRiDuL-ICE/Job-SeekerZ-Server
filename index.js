@@ -1,11 +1,17 @@
 const express = require("express");
 const app = express();
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 3000;
 const cors = require("cors");
 require("dotenv").config();
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000'],
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@phmridul.el21o.mongodb.net/?retryWrites=true&w=majority&appName=PHMRiDuL`;
@@ -29,21 +35,32 @@ async function run() {
       .db("JobSeekerZDB")
       .collection("job_applications");
 
+    app.post(`/jwt`, async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: "1h" });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+        })
+        .send({ success: true });
+    });
+
     app.get("/jobs", async (req, res) => {
       const email = req.query.email;
-      let query = {}
-      if(email){
-        query = {hr_email: email}
+      let query = {};
+      if (email) {
+        query = { hr_email: email };
       }
       const result = await jobCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.post(`/jobs`, async(req, res) => {
+    app.post(`/jobs`, async (req, res) => {
       const newJob = req.body;
-      const result = await jobCollection.insertOne(newJob)
-      res.send(result)
-    })
+      const result = await jobCollection.insertOne(newJob);
+      res.send(result);
+    });
 
     app.get("/jobs/:id", async (req, res) => {
       const id = req.params.id;
@@ -55,23 +72,22 @@ async function run() {
     app.post("/job-applications", async (req, res) => {
       const data = req.body;
       const result = await jobApllicationCollection.insertOne(data);
-      const id = data.job_id
-      const query = { _id: new ObjectId(id)}
-      const job = await jobCollection.findOne(query)
+      const id = data.job_id;
+      const query = { _id: new ObjectId(id) };
+      const job = await jobCollection.findOne(query);
       let newCount = 0;
-      if(job.applicationCount){
+      if (job.applicationCount) {
         newCount = job.applicationCount + 1;
-      }
-      else{
+      } else {
         newCount = 1;
       }
-      const filter = { _id: new ObjectId(id)}
+      const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          applicationCount: newCount
-        }
-      }
-      const updateJobCount = await jobCollection.updateOne(filter, updatedDoc)
+          applicationCount: newCount,
+        },
+      };
+      const updateJobCount = await jobCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
@@ -92,26 +108,28 @@ async function run() {
       res.send(result);
     });
 
-    app.get(`/job-applications/jobs/:job_id`, async(req, res) => {
-      const job_id = req.params.job_id
-      const filter = { job_id: job_id}
-      const result = await jobApllicationCollection.find(filter).toArray()
-      res.send(result)
-    })
+    app.get(`/job-applications/jobs/:job_id`, async (req, res) => {
+      const job_id = req.params.job_id;
+      const filter = { job_id: job_id };
+      const result = await jobApllicationCollection.find(filter).toArray();
+      res.send(result);
+    });
 
-
-    app.patch(`/job-applications/:id`, async(req, res) => {
-      const id = req.params.id
-      const data = req.body
-      const filter = {_id: new ObjectId(id)}
+    app.patch(`/job-applications/:id`, async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          status: data.status
-        }
-      }
-      const result = await jobApllicationCollection.updateOne(filter, updatedDoc)
-      res.send(result)
-    })
+          status: data.status,
+        },
+      };
+      const result = await jobApllicationCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
 
     app.delete(`/job-application/:id`, async (req, res) => {
       const id = req.params.id;
@@ -120,11 +138,6 @@ async function run() {
       const result = await jobApllicationCollection.deleteOne(filter);
       res.send(result);
     });
-
-
-   
-
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
