@@ -8,11 +8,34 @@ const cors = require("cors");
 require("dotenv").config();
 
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: ['http://localhost:5173'],
   credentials: true,
 }));
 app.use(cookieParser());
 app.use(express.json());
+
+const logger = (req, res, next) => {
+  console.log('Inside the logger')
+  next()
+}
+
+const verifyToken = (req, res, next) => {
+  console.log('Inside verify token middlewire', req.cookies)
+  const token = req.cookies?.token
+
+  if(!token){
+    return res.status(401).send({message: 'Unauthorized access'})
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if(err){
+      return res.status(401).send({message: 'Unauthorized access'})
+    }
+    next()
+  })
+}
+
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@phmridul.el21o.mongodb.net/?retryWrites=true&w=majority&appName=PHMRiDuL`;
 
@@ -91,14 +114,14 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/job-application", async (req, res) => {
+    app.get("/job-application", verifyToken, async (req, res) => {
       const email = req.query.email;
       const filter = { applicant_email: email };
+
       const result = await jobApllicationCollection.find(filter).toArray();
       for (const application of result) {
         const query = { _id: new ObjectId(application.job_id) };
         const job = await jobCollection.findOne(query);
-        console.log(job);
         if (job) {
           application.tittle = job.title;
           application.company = job.company;
