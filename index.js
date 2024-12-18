@@ -70,6 +70,15 @@ async function run() {
         .send({ success: true });
     });
 
+    app.post("/logout", (req, res) => {
+      res
+        .clearCookie("token", {
+          httpOnly: true,
+          secure: false,
+        })
+        .send({ success: true });
+    });
+
     app.get("/jobs", async (req, res) => {
       const email = req.query.email;
       let query = {};
