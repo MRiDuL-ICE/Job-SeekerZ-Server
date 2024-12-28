@@ -1,6 +1,6 @@
 # Job SeekerZ Server
 
-Backend server for the Career-Code job portal application, built with Node.js, Express, and MongoDB. This server handles job postings, applications, and user authentication through JWT tokens.
+Backend server for the Job SeekerZ job portal application, built with Node.js, Express, and MongoDB. This server handles job postings, applications, and user authentication through JWT tokens.
 
 Server Live Link: [Job-SeekerZ-Server](https://job-seekerz-server.vercel.app/)
 
@@ -102,7 +102,7 @@ Server Live Link: [Job-SeekerZ-Server](https://job-seekerz-server.vercel.app/)
 ## 📁 Project Structure
 
 ```
-career-code-server/
+Job SeekerZ-server/
 ├── .env
 ├── .gitignore
 ├── index.js
